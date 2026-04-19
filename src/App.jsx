@@ -113,7 +113,7 @@ function App() {
       />
       <main style={appStyles.main} data-screen-label={activeTab === 'tasks' ? 'Tareas' : 'Calendario'}>
         {activeTab === 'tasks' ? (
-          <TasksView tasks={tasks} setTasks={setTasks} clients={clients} />
+          <TasksView tasks={tasks} setTasks={setTasks} clients={clients} onAddClient={addClient} />
         ) : (
           <CalendarView weeks={weeks} setWeeks={setWeeks} clients={clients} />
         )}

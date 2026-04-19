@@ -269,20 +269,48 @@ const tasksStyles = {
   },
 };
 
-function TaskModal({ open, onClose, onSave, clients, initial }) {
+function TaskModal({ open, onClose, onSave, onAddClient, clients, initial }) {
   const [cliente, setCliente] = React.useState('');
   const [descripcion, setDescripcion] = React.useState('');
   const [fecha, setFecha] = React.useState('');
+  const [addingClient, setAddingClient] = React.useState(false);
+  const [newClientName, setNewClientName] = React.useState('');
+  const newClientRef = React.useRef(null);
 
   React.useEffect(() => {
     if (open) {
       setCliente(initial?.cliente || (clients[0]?.name ?? ''));
       setDescripcion(initial?.descripcion || '');
       setFecha(initial?.fecha || '');
+      setAddingClient(false);
+      setNewClientName('');
     }
   }, [open, initial, clients]);
 
+  React.useEffect(() => {
+    if (addingClient && newClientRef.current) newClientRef.current.focus();
+  }, [addingClient]);
+
   if (!open) return null;
+
+  const handleClientChange = (e) => {
+    if (e.target.value === '__new__') {
+      setAddingClient(true);
+      setNewClientName('');
+    } else {
+      setCliente(e.target.value);
+    }
+  };
+
+  const confirmNewClient = () => {
+    const name = newClientName.trim();
+    if (name) {
+      onAddClient(name);
+      setCliente(name);
+    }
+    setAddingClient(false);
+    setNewClientName('');
+  };
 
   const submit = () => {
     if (!descripcion.trim()) return;
@@ -299,13 +327,28 @@ function TaskModal({ open, onClose, onSave, clients, initial }) {
         <div style={tasksStyles.modalBody}>
           <div style={tasksStyles.field}>
             <label style={tasksStyles.label}>Cliente</label>
-            {clients.length > 0 ? (
-              <select style={tasksStyles.inputField} value={cliente} onChange={(e) => setCliente(e.target.value)}>
+            {addingClient ? (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  ref={newClientRef}
+                  style={{ ...tasksStyles.inputField, flex: 1 }}
+                  placeholder="Nombre del cliente nuevo"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') confirmNewClient();
+                    if (e.key === 'Escape') { setAddingClient(false); setNewClientName(''); }
+                  }}
+                />
+                <button style={tasksStyles.btnPrimary} onClick={confirmNewClient}>Ok</button>
+                <button style={tasksStyles.btnGhost} onClick={() => { setAddingClient(false); setNewClientName(''); }}>✕</button>
+              </div>
+            ) : (
+              <select style={tasksStyles.inputField} value={cliente} onChange={handleClientChange}>
                 <option value="">Sin asignar</option>
                 {clients.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                <option value="__new__">+ Nuevo cliente…</option>
               </select>
-            ) : (
-              <input style={tasksStyles.inputField} placeholder="Nombre del cliente" value={cliente} onChange={(e) => setCliente(e.target.value)} />
             )}
           </div>
           <div style={tasksStyles.field}>
@@ -334,7 +377,7 @@ function TaskModal({ open, onClose, onSave, clients, initial }) {
   );
 }
 
-function TasksView({ tasks, setTasks, clients }) {
+function TasksView({ tasks, setTasks, clients, onAddClient }) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [editing, setEditing] = React.useState(null);
   const [search, setSearch] = React.useState('');
@@ -528,6 +571,7 @@ function TasksView({ tasks, setTasks, clients }) {
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditing(null); }}
         onSave={saveTask}
+        onAddClient={onAddClient}
         clients={clients}
         initial={editing}
       />
