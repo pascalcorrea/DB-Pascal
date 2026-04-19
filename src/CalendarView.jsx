@@ -272,12 +272,8 @@ const calStyles = {
   },
 };
 
-function WeekCard({ week, weekClients, allClients, onToggleState, onAddClient, onRemoveClient, isCurrent, isPast }) {
-  const [addingRow, setAddingRow] = React.useState(false);
-  const [newClientId, setNewClientId] = React.useState('');
+function WeekCard({ week, weekClients, allClients, onToggleState, isCurrent, isPast }) {
   const [hoverRow, setHoverRow] = React.useState(null);
-
-  const availableToAdd = allClients.filter((c) => !weekClients.some((wc) => wc.clientId === c.id));
 
   const counts = CAL_STATES.reduce((acc, st) => {
     acc[st.id] = weekClients.filter((wc) => wc.state === st.id).length;
@@ -326,7 +322,6 @@ function WeekCard({ week, weekClients, allClients, onToggleState, onAddClient, o
               {CAL_STATES.map((st) => (
                 <th key={st.id} style={calStyles.th}>{st.label}</th>
               ))}
-              <th style={{ ...calStyles.th, width: 40, borderRight: 'none' }}></th>
             </tr>
           </thead>
           <tbody>
@@ -369,17 +364,6 @@ function WeekCard({ week, weekClients, allClients, onToggleState, onAddClient, o
                       </td>
                     );
                   })}
-                  <td style={{ ...calStyles.tdState, borderRight: 'none', width: 40 }}>
-                    <button
-                      style={{ ...calStyles.removeRowBtn, opacity: hoverRow === wc.clientId ? 1 : 0 }}
-                      onClick={() => onRemoveClient(week.id, wc.clientId)}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--danger-soft)'; e.currentTarget.style.color = 'var(--danger)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-3)'; }}
-                      title="Quitar de esta semana"
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                    </button>
-                  </td>
                 </tr>
               );
             })}
@@ -387,44 +371,6 @@ function WeekCard({ week, weekClients, allClients, onToggleState, onAddClient, o
         </table>
       )}
 
-      <div style={calStyles.addRow}>
-        {addingRow ? (
-          <>
-            <select
-              style={calStyles.addRowSelect}
-              value={newClientId}
-              onChange={(e) => setNewClientId(e.target.value)}
-              autoFocus
-            >
-              <option value="">Elegir cliente…</option>
-              {availableToAdd.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <button
-              style={calStyles.addRowBtn}
-              onClick={() => {
-                if (newClientId) { onAddClient(week.id, newClientId); setNewClientId(''); setAddingRow(false); }
-              }}
-            >Agregar</button>
-            <button style={{ ...calStyles.addRowGhost, border: 'none' }} onClick={() => { setAddingRow(false); setNewClientId(''); }}>Cancelar</button>
-          </>
-        ) : (
-          availableToAdd.length > 0 ? (
-            <button
-              style={calStyles.addRowGhost}
-              onClick={() => setAddingRow(true)}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--accent-text)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-              Agregar cliente a esta semana
-            </button>
-          ) : (
-            <span style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
-              Todos los clientes ya están en esta semana
-            </span>
-          )
-        )}
-      </div>
     </div>
   );
 }
@@ -459,30 +405,23 @@ function CalendarView({ weeks, setWeeks, clients }) {
   const pastWeeks = weeksInMonth.filter((w) => w.id < currentWeekId);
   const currentAndFuture = weeksInMonth.filter((w) => w.id >= currentWeekId);
 
+  // Construye la lista completa de clientes para una semana, rellenando con 'pendiente' los que faltan
+  const weekClientsFor = (w) =>
+    clients.map((c) => w.clients.find((wc) => wc.clientId === c.id) || { clientId: c.id, state: 'pendiente' });
+
   const toggleState = (wId, clientId, stateId) => {
     setWeeks(weeks.map((w) => {
       if (w.id !== wId) return w;
+      const exists = w.clients.some((wc) => wc.clientId === clientId);
+      if (!exists) {
+        return { ...w, clients: [...w.clients, { clientId, state: stateId }] };
+      }
       return {
         ...w,
         clients: w.clients.map((wc) =>
           wc.clientId === clientId ? { ...wc, state: wc.state === stateId ? 'pendiente' : stateId } : wc
         ),
       };
-    }));
-  };
-
-  const addClientToWeek = (wId, clientId) => {
-    setWeeks(weeks.map((w) => {
-      if (w.id !== wId) return w;
-      if (w.clients.some((wc) => wc.clientId === clientId)) return w;
-      return { ...w, clients: [...w.clients, { clientId, state: 'pendiente' }] };
-    }));
-  };
-
-  const removeClientFromWeek = (wId, clientId) => {
-    setWeeks(weeks.map((w) => {
-      if (w.id !== wId) return w;
-      return { ...w, clients: w.clients.filter((wc) => wc.clientId !== clientId) };
     }));
   };
 
@@ -599,11 +538,9 @@ function CalendarView({ weeks, setWeeks, clients }) {
         <WeekCard
           key={w.id}
           week={w}
-          weekClients={w.clients}
+          weekClients={weekClientsFor(w)}
           allClients={clients}
           onToggleState={toggleState}
-          onAddClient={addClientToWeek}
-          onRemoveClient={removeClientFromWeek}
           isCurrent={w.id === currentWeekId}
           isPast={false}
         />
@@ -627,11 +564,9 @@ function CalendarView({ weeks, setWeeks, clients }) {
             <WeekCard
               key={w.id}
               week={w}
-              weekClients={w.clients}
+              weekClients={weekClientsFor(w)}
               allClients={clients}
               onToggleState={toggleState}
-              onAddClient={addClientToWeek}
-              onRemoveClient={removeClientFromWeek}
               isCurrent={false}
               isPast={true}
             />
