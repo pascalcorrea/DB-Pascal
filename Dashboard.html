@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard · Gestión de contenido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface-2: #f4f2ee;
+    --border: #e8e4dd;
+    --border-strong: #d9d3ca;
+    --text: #1a1916;
+    --text-2: #5c5954;
+    --text-3: #8a8680;
+    --accent: oklch(0.55 0.22 280);
+    --accent-soft: oklch(0.95 0.04 280);
+    --accent-text: oklch(0.40 0.20 280);
+    --success: oklch(0.65 0.15 155);
+    --success-soft: oklch(0.95 0.05 155);
+    --warn: oklch(0.72 0.15 70);
+    --warn-soft: oklch(0.96 0.05 70);
+    --danger: oklch(0.60 0.20 25);
+    --danger-soft: oklch(0.96 0.04 25);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px rgba(20, 18, 15, 0.04);
+    --shadow: 0 4px 14px rgba(20, 18, 15, 0.06), 0 1px 2px rgba(20, 18, 15, 0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { height: 100vh; display: flex; flex-direction: column; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#faf9f7">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#faf9f7"/>
+    <rect x="420" y="260" width="360" height="280" rx="28" fill="oklch(0.55 0.22 280)"/>
+    <rect x="480" y="340" width="240" height="24" rx="6" fill="#ffffff" opacity="0.95"/>
+    <rect x="480" y="388" width="180" height="18" rx="5" fill="#ffffff" opacity="0.6"/>
+    <rect x="480" y="422" width="210" height="18" rx="5" fill="#ffffff" opacity="0.6"/>
+    <circle cx="500" cy="300" r="10" fill="#ffffff"/>
+  </svg>
+</template>
+<div id="root"></div>
+
+<script type="text/babel" src="src/utils.jsx"></script>
+<script type="text/babel" src="src/Sidebar.jsx"></script>
+<script type="text/babel" src="src/TasksView.jsx"></script>
+<script type="text/babel" src="src/CalendarView.jsx"></script>
+<script type="text/babel" src="src/App.jsx"></script>
+</body>
+</html>
