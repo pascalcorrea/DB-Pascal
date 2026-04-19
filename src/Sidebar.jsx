@@ -157,6 +157,9 @@ const sidebarStyles = {
     fontSize: 11,
     color: 'var(--text-3)',
     fontFamily: 'JetBrains Mono, monospace',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
 };
 
@@ -292,7 +295,16 @@ function Sidebar({ activeTab, setActiveTab, pendingCount, clients, onAddClient, 
         ))}
       </div>
 
-      <div style={sidebarStyles.footer}>localStorage · v1.0</div>
+      <div style={sidebarStyles.footer}>
+        <span>localStorage · v1.0</span>
+        <a
+          href="/api/logout"
+          style={{ color: 'var(--text-3)', textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--danger)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-3)'}
+          title="Cerrar sesión"
+        >salir</a>
+      </div>
     </aside>
   );
 }
