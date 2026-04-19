@@ -27,9 +27,9 @@ const CLIENT_COLORS = [
 ];
 
 const SEED_CLIENTS = [
-  { id: uid(), name: 'Café Lunares', color: CLIENT_COLORS[0] },
-  { id: uid(), name: 'Estudio Norte', color: CLIENT_COLORS[1] },
-  { id: uid(), name: 'Bruma Swim', color: CLIENT_COLORS[2] },
+  { id: uid(), name: 'Café Lunares', color: CLIENT_COLORS[0], calVisible: true },
+  { id: uid(), name: 'Estudio Norte', color: CLIENT_COLORS[1], calVisible: true },
+  { id: uid(), name: 'Bruma Swim', color: CLIENT_COLORS[2], calVisible: true },
 ];
 
 function todayIso() { return isoDate(new Date()); }
@@ -91,7 +91,11 @@ function App() {
 
   const addClient = (name) => {
     const color = CLIENT_COLORS[clients.length % CLIENT_COLORS.length];
-    setClients([...clients, { id: uid(), name, color }]);
+    setClients([...clients, { id: uid(), name, color, calVisible: true }]);
+  };
+
+  const toggleCalVisible = (id) => {
+    setClients(clients.map((c) => c.id === id ? { ...c, calVisible: c.calVisible === false ? true : false } : c));
   };
 
   const removeClient = (id) => {
@@ -110,6 +114,7 @@ function App() {
         clients={clients}
         onAddClient={addClient}
         onRemoveClient={removeClient}
+        onToggleCalVisible={toggleCalVisible}
       />
       <main style={appStyles.main} data-screen-label={activeTab === 'tasks' ? 'Tareas' : 'Calendario'}>
         {activeTab === 'tasks' ? (

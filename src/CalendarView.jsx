@@ -405,9 +405,12 @@ function CalendarView({ weeks, setWeeks, clients }) {
   const pastWeeks = weeksInMonth.filter((w) => w.id < currentWeekId);
   const currentAndFuture = weeksInMonth.filter((w) => w.id >= currentWeekId);
 
-  // Construye la lista completa de clientes para una semana, rellenando con 'pendiente' los que faltan
+  // Solo clientes marcados como visibles en el calendario
+  const calClients = clients.filter((c) => c.calVisible !== false);
+
+  // Construye la lista completa de clientes visibles para una semana
   const weekClientsFor = (w) =>
-    clients.map((c) => w.clients.find((wc) => wc.clientId === c.id) || { clientId: c.id, state: 'pendiente' });
+    calClients.map((c) => w.clients.find((wc) => wc.clientId === c.id) || { clientId: c.id, state: 'pendiente' });
 
   const toggleState = (wId, clientId, stateId) => {
     setWeeks(weeks.map((w) => {
@@ -512,14 +515,14 @@ function CalendarView({ weeks, setWeeks, clients }) {
         </div>
       </div>
 
-      {clients.length === 0 && (
+      {calClients.length === 0 && (
         <div style={{
           padding: '40px 20px', textAlign: 'center', background: 'var(--surface)',
           border: '1px dashed var(--border-strong)', borderRadius: 12, color: 'var(--text-2)',
           marginBottom: 14,
         }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Primero agrega clientes</div>
-          <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>Usa el botón <strong>+</strong> en el panel lateral para empezar.</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Ningún cliente visible en calendario</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>Activá el cuadrito junto al nombre del cliente en el panel lateral.</div>
         </div>
       )}
 

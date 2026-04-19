@@ -186,7 +186,7 @@ function NavIcon({ name }) {
   return null;
 }
 
-function Sidebar({ activeTab, setActiveTab, pendingCount, clients, onAddClient, onRemoveClient }) {
+function Sidebar({ activeTab, setActiveTab, pendingCount, clients, onAddClient, onRemoveClient, onToggleCalVisible }) {
   const [adding, setAdding] = React.useState(false);
   const [newName, setNewName] = React.useState('');
   const [hoverId, setHoverId] = React.useState(null);
@@ -268,31 +268,51 @@ function Sidebar({ activeTab, setActiveTab, pendingCount, clients, onAddClient, 
           <div style={sidebarStyles.empty}>Agrega tu primer cliente con +</div>
         )}
 
-        {clients.map((c) => (
-          <div
-            key={c.id}
-            style={sidebarStyles.clientRow}
-            onMouseEnter={(e) => { setHoverId(c.id); e.currentTarget.style.background = 'var(--surface-2)'; }}
-            onMouseLeave={(e) => { setHoverId(null); e.currentTarget.style.background = 'transparent'; }}
-          >
-            <div style={{ ...sidebarStyles.clientDot, background: c.color || 'var(--accent)' }}></div>
-            <span style={sidebarStyles.clientName}>{c.name}</span>
-            <button
-              style={{
-                ...sidebarStyles.removeBtn,
-                opacity: hoverId === c.id ? 1 : 0,
-              }}
-              onClick={() => {
-                if (confirm(`¿Quitar cliente "${c.name}"?\n\nSus tareas y entradas de calendario no se borran, pero perderás la asociación.`)) {
-                  onRemoveClient(c.id);
-                }
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--danger-soft)'; e.currentTarget.style.color = 'var(--danger)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-3)'; }}
-              title="Quitar cliente"
-            >×</button>
-          </div>
-        ))}
+        {clients.map((c) => {
+          const calOn = c.calVisible !== false;
+          return (
+            <div
+              key={c.id}
+              style={sidebarStyles.clientRow}
+              onMouseEnter={(e) => { setHoverId(c.id); e.currentTarget.style.background = 'var(--surface-2)'; }}
+              onMouseLeave={(e) => { setHoverId(null); e.currentTarget.style.background = 'transparent'; }}
+            >
+              <div style={{ ...sidebarStyles.clientDot, background: c.color || 'var(--accent)' }}></div>
+              <span style={sidebarStyles.clientName}>{c.name}</span>
+              <button
+                onClick={() => onToggleCalVisible(c.id)}
+                title={calOn ? 'Visible en calendario · click para ocultar' : 'Oculto en calendario · click para mostrar'}
+                style={{
+                  width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                  border: `1.5px solid ${calOn ? c.color || 'var(--accent)' : 'var(--border-strong)'}`,
+                  background: calOn ? c.color || 'var(--accent)' : 'transparent',
+                  display: 'grid', placeItems: 'center',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {calOn && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <button
+                style={{
+                  ...sidebarStyles.removeBtn,
+                  opacity: hoverId === c.id ? 1 : 0,
+                }}
+                onClick={() => {
+                  if (confirm(`¿Quitar cliente "${c.name}"?\n\nSus tareas y entradas de calendario no se borran, pero perderás la asociación.`)) {
+                    onRemoveClient(c.id);
+                  }
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--danger-soft)'; e.currentTarget.style.color = 'var(--danger)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-3)'; }}
+                title="Quitar cliente"
+              >×</button>
+            </div>
+          );
+        })}
       </div>
 
       <div style={sidebarStyles.footer}>
