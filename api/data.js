@@ -23,10 +23,10 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const { clients, tasks, weeks } = req.body ?? {};
-    const r = await fetch(`${base}?id=eq.default`, {
-      method: 'PATCH',
-      headers: { ...headers, Prefer: 'return=minimal' },
-      body: JSON.stringify({ clients, tasks, weeks, updated_at: new Date().toISOString() }),
+    const r = await fetch(base, {
+      method: 'POST',
+      headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ id: 'default', clients, tasks, weeks, updated_at: new Date().toISOString() }),
     });
     if (!r.ok) return res.status(500).json({ error: await r.text() });
     return res.json({ ok: true });
