@@ -12,6 +12,26 @@ const appStyles = {
     overflowY: 'auto',
     height: '100vh',
   },
+  syncDot: {
+    position: 'fixed',
+    bottom: 12,
+    right: 14,
+    width: 7,
+    height: 7,
+    borderRadius: '50%',
+    background: 'var(--text-3)',
+    opacity: 0.5,
+    transition: 'background 0.3s, opacity 0.3s',
+    zIndex: 9999,
+  },
+  syncDotSaving: {
+    background: 'oklch(0.65 0.15 155)',
+    opacity: 1,
+  },
+  syncDotError: {
+    background: 'var(--danger)',
+    opacity: 1,
+  },
 };
 
 // Paleta de colores asignada rotativamente a clientes nuevos
@@ -68,8 +88,11 @@ function makeSeedWeeks(clients) {
   ];
 }
 
+// Sync status: 'idle' | 'saving' | 'error'
 function App() {
   const [activeTab, setActiveTab] = React.useState(() => loadLS(STORAGE_KEYS.activeTab, 'tasks'));
+
+  // Init from localStorage for instant load; API fetch will overwrite with cloud data
   const [clients, setClients] = React.useState(() => loadLS(STORAGE_KEYS.clients, SEED_CLIENTS));
   const [tasks, setTasks] = React.useState(() => {
     const saved = loadLS(STORAGE_KEYS.tasks, null);
@@ -84,10 +107,59 @@ function App() {
     return makeSeedWeeks(c);
   });
 
+  const [syncStatus, setSyncStatus] = React.useState('idle');
+  const initialized = React.useRef(false);
+  const saveTimer = React.useRef(null);
+
+  // On mount: pull latest data from Supabase via API
+  React.useEffect(() => {
+    fetch('/api/data')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data.clients)) setClients(data.clients);
+        if (Array.isArray(data.tasks))   setTasks(data.tasks);
+        if (Array.isArray(data.weeks))   setWeeks(data.weeks);
+        // DB vacío — subir datos locales por primera vez
+        if (!Array.isArray(data.clients) && !Array.isArray(data.tasks) && !Array.isArray(data.weeks)) {
+          initialized.current = true;
+          const localClients = loadLS(STORAGE_KEYS.clients, SEED_CLIENTS);
+          const localTasks   = loadLS(STORAGE_KEYS.tasks, []);
+          const localWeeks   = loadLS(STORAGE_KEYS.weeks, []);
+          fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clients: localClients, tasks: localTasks, weeks: localWeeks }),
+          }).catch(() => {});
+          return;
+        }
+        initialized.current = true;
+      })
+      .catch(() => { initialized.current = true; /* red failure — keep localStorage data */ });
+  }, []);
+
+  // Persist activeTab locally only
   React.useEffect(() => { saveLS(STORAGE_KEYS.activeTab, activeTab); }, [activeTab]);
-  React.useEffect(() => { saveLS(STORAGE_KEYS.clients, clients); }, [clients]);
-  React.useEffect(() => { saveLS(STORAGE_KEYS.tasks, tasks); }, [tasks]);
-  React.useEffect(() => { saveLS(STORAGE_KEYS.weeks, weeks); }, [weeks]);
+
+  // On any data change: cache locally + debounced save to Supabase
+  React.useEffect(() => {
+    if (!initialized.current) return;
+
+    saveLS(STORAGE_KEYS.clients, clients);
+    saveLS(STORAGE_KEYS.tasks, tasks);
+    saveLS(STORAGE_KEYS.weeks, weeks);
+
+    setSyncStatus('saving');
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clients, tasks, weeks }),
+      })
+        .then(r => r.ok ? setSyncStatus('idle') : setSyncStatus('error'))
+        .catch(() => setSyncStatus('error'));
+    }, 1200);
+  }, [clients, tasks, weeks]);
 
   const addClient = (name) => {
     const color = CLIENT_COLORS[clients.length % CLIENT_COLORS.length];
@@ -100,10 +172,15 @@ function App() {
 
   const removeClient = (id) => {
     setClients(clients.filter((c) => c.id !== id));
-    // No borramos tasks/weeks para preservar historial, sólo queda "sin asignar" o "cliente eliminado"
   };
 
   const pendingCount = tasks.filter((t) => !t.done).length;
+
+  const dotStyle = {
+    ...appStyles.syncDot,
+    ...(syncStatus === 'saving' ? appStyles.syncDotSaving : {}),
+    ...(syncStatus === 'error'  ? appStyles.syncDotError  : {}),
+  };
 
   return (
     <div style={appStyles.shell}>
@@ -123,6 +200,7 @@ function App() {
           <CalendarView weeks={weeks} setWeeks={setWeeks} clients={clients} />
         )}
       </main>
+      <div style={dotStyle} title={syncStatus === 'error' ? 'Error al guardar' : syncStatus === 'saving' ? 'Guardando…' : 'Sincronizado'} />
     </div>
   );
 }
